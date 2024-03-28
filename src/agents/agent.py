@@ -60,6 +60,18 @@ class Agent:
         self.tokenizer = tiktoken.get_encoding("cl100k_base")
 
     def search_queries(self, queries: list, project_name: str) -> dict:
+        """        Perform search queries and extract information from the web.
+
+        This method takes a list of search queries and a project name as input. It then performs search queries for each query, extracts information from the web, and returns the results in a dictionary.
+
+        Args:
+            queries (list): A list of search queries to be performed.
+            project_name (str): The name of the project for which the search queries are being performed.
+
+        Returns:
+            dict: A dictionary containing the search query as key and the extracted information as value.
+        """
+
         results = {}
 
         dummy_variable = {}
