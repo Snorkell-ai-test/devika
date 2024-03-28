@@ -60,6 +60,23 @@ class Agent:
         self.tokenizer = tiktoken.get_encoding("cl100k_base")
 
     def search_queries(self, queries: list, project_name: str) -> dict:
+        """        Search for queries and retrieve information from the web.
+
+        This method takes a list of queries and a project name as input, and performs the following steps for each query:
+        1. Checks if the query is already present in the knowledge base. If found, retrieves the information from the knowledge base.
+        2. Searches for the query using Bing search and retrieves the first link.
+        3. Navigates to the link, takes a screenshot, and extracts the text content.
+        4. Formats and learns from the extracted text using the Formatter Agent.
+        5. Adds the newly acquired data to the knowledge base.
+
+        Args:
+            queries (list): A list of queries to search for.
+            project_name (str): The name of the project for which the search is being performed.
+
+        Returns:
+            dict: A dictionary containing the results for each query, where the query is the key and the retrieved information is the value.
+        """
+
         results = {}
 
         knowledge_base = KnowledgeBase()
