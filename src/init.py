@@ -4,6 +4,11 @@ from src.config import Config
 from src.logger import Logger
 
 def init_devika():
+    """    Initialize Devika and its prerequisites.
+
+    This function initializes the Devika application by setting up the necessary directories and loading BERT models.
+    """
+
     config = Config()
     logger = Logger()
 

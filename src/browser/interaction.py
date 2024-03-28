@@ -156,6 +156,11 @@ black_listed_elements = set(["html", "head", "title", "meta", "iframe", "body", 
 
 class Crawler:
 	def __init__(self):
+		"""		Initializes a new instance of the class.
+
+		It initializes a new instance of the class and sets up a headless Chromium browser with a viewport size of 1280x1080.
+		"""
+
 		self.browser = (
 			sync_playwright()
 			.start()
@@ -168,6 +173,15 @@ class Crawler:
 		self.page.set_viewport_size({"width": 1280, "height": 1080})
   
 	def screenshot(self, project_name):
+		"""		Takes a screenshot of the current web page and saves it to the screenshots directory.
+
+		Args:
+		    project_name (str): The name of the project for which the screenshot is being taken.
+
+		Returns:
+		    str: The file path where the screenshot is saved.
+		"""
+
 		screenshots_save_path = Config().get_screenshots_dir()
 
 		page_metadata = self.page.evaluate("() => { return { url: document.location.href, title: document.title } }")
@@ -188,11 +202,29 @@ class Crawler:
 		return path_to_save
 
 	def go_to_page(self, url):
+		"""		Navigates to the specified URL and initializes a new CDP session.
+
+		Args:
+		    url (str): The URL to navigate to.
+		"""
+
 		self.page.goto(url=url if "://" in url else "http://" + url)
 		self.client = self.page.context.new_cdp_session(self.page)
 		self.page_element_buffer = {}
 
 	def scroll(self, direction):
+		"""		Scroll the web page in the specified direction.
+
+		This method scrolls the web page either up or down based on the input direction.
+
+		Args:
+		    direction (str): The direction in which to scroll the web page. It can be either "up" or "down".
+
+
+		Raises:
+		    ValueError: If the input direction is not "up" or "down".
+		"""
+
 		if direction == "up":
 			self.page.evaluate(
 				"(document.scrollingElement || document.body).scrollTop = (document.scrollingElement || document.body).scrollTop - window.innerHeight;"
@@ -203,6 +235,19 @@ class Crawler:
 			)
 
 	def click(self, id):
+		"""		Click on the element with the given id.
+
+		This method first removes the target attribute from all links on the page using injected JavaScript.
+		It then attempts to locate the element with the given id and clicks on it if found.
+
+		Args:
+		    id (int): The identifier of the element to be clicked.
+
+
+		Raises:
+		    KeyError: If the element with the given id is not found in the page_element_buffer.
+		"""
+
 		# Inject javascript into the page which removes the target= attribute from all links
 		js = """
 		links = document.getElementsByTagName("a");
@@ -222,13 +267,38 @@ class Crawler:
 			print("Could not find element")
 
 	def type(self, id, text):
+		"""		Simulate typing the given text into an element identified by the provided id.
+
+		This method simulates a user typing the specified text into an HTML input element identified by the given id.
+
+		Args:
+		    id (str): The id attribute of the HTML input element.
+		    text (str): The text to be typed into the input element.
+		"""
+
 		self.click(id)
 		self.page.keyboard.type(text)
 
 	def enter(self):
+		"""		Presses the 'Enter' key using the keyboard.
+
+		This method simulates the pressing of the 'Enter' key using the keyboard.
+
+		Args:
+		    self (object): The current instance of the class.
+		"""
+
 		self.page.keyboard.press("Enter")
 
 	def crawl(self):
+		"""		Crawls the web page and captures the elements in the viewport.
+
+		This method captures various attributes and metadata of the elements in the viewport of the web page. It calculates the position and size of the elements, checks if they are clickable, and generates a string representation of each element.
+
+		Returns:
+		    list: A list of string representations of the elements in the viewport.
+		"""
+
 		page = self.page
 		page_element_buffer = self.page_element_buffer
 		start = time.time()
@@ -293,6 +363,16 @@ class Crawler:
 		}
 
 		def convert_name(node_name, is_clickable):
+			"""			Convert the HTML node name to a more descriptive name based on its type and clickability.
+
+			Args:
+			    node_name (str): The name of the HTML node.
+			    is_clickable (bool): A boolean indicating whether the node is clickable.
+
+			Returns:
+			    str: The converted name based on the type and clickability of the HTML node.
+			"""
+
 			if node_name == "a":
 				return "link"
 			if node_name == "input":
@@ -304,6 +384,19 @@ class Crawler:
 			return "text"
 
 		def find_attributes(attributes, keys):
+			"""			Find and return a dictionary of attributes from a list of strings based on given keys.
+
+			It iterates through the list of attributes and extracts key-value pairs based on the given keys.
+			If a key is found, it is added to the dictionary of values. If all keys are found, the function returns the dictionary.
+
+			Args:
+			    attributes (list): A list of strings containing attribute key-value pairs.
+			    keys (list): A list of keys to be searched in the attributes list.
+
+			Returns:
+			    dict: A dictionary containing the key-value pairs found in the attributes list.
+			"""
+
 			values = {}
 			for [key_index, value_index] in zip(*(iter(attributes),) * 2):
 				if value_index < 0:
@@ -318,6 +411,21 @@ class Crawler:
 			return values
 
 		def add_to_hash_tree(hash_tree, tag, node_id, node_name, parent_id):
+			"""			Add a node to the hash tree and update its value.
+
+			This function adds a node to the hash tree and updates its value based on the tag, node_id, node_name, and parent_id.
+
+			Args:
+			    hash_tree (dict): A dictionary representing the hash tree.
+			    tag (str): The tag to be added.
+			    node_id (int): The ID of the node to be added.
+			    node_name (str): The name of the node to be added.
+			    parent_id (int): The ID of the parent node.
+
+			Returns:
+			    tuple: A tuple containing a boolean value indicating if the parent is a descendant anchor, and the anchor ID.
+			"""
+
 			parent_id_str = str(parent_id)
 			if parent_id_str not in hash_tree:
 				parent_name = strings[node_names[parent_id]].lower()
@@ -483,15 +591,48 @@ class Crawler:
 		return elements_of_interest
 
 def start_interaction(model_id, objective, project_name):
+	"""	Start an interaction with a web page using GPT-3 generated commands.
+
+	This function initiates an interaction with a web page by utilizing GPT-3 generated commands. It provides a set of commands for navigation and interaction with the web page based on the given objective.
+
+	Args:
+	    model_id (str): The ID of the GPT-3 model to be used for generating commands.
+	    objective (str): The objective or task to be achieved during the interaction.
+	    project_name (str): The name of the project or task for reference.
+
+
+	Raises:
+	    KeyboardInterrupt: If the user interrupts the interaction by pressing Ctrl+C.
+	"""
+
 	_crawler = Crawler()
 
 	def print_help():
+		"""		Print the available commands for interacting with the interface.
+
+		This function prints the available commands for interacting with the interface,
+		including visiting a URL, scrolling up and down, clicking, typing, viewing commands again,
+		running a suggested command, and changing the objective.
+		"""
+
 		print(
 			"(g) to visit url\n(u) scroll up\n(d) scroll down\n(c) to click\n(t) to type\n" +
 			"(h) to view commands again\n(r/enter) to run suggested command\n(o) change objective"
 		)
 
 	def get_gpt_command(objective, url, previous_command, browser_content):
+		"""		Generate GPT command based on the given objective, URL, previous command, and browser content.
+
+		Args:
+		    objective (str): The objective for generating the GPT command.
+		    url (str): The URL for which the GPT command is being generated.
+		    previous_command (str): The previous command used in the GPT interaction.
+		    browser_content (str): The content of the browser related to the objective.
+
+		Returns:
+		    str: The response generated by GPT based on the provided inputs.
+		"""
+
 		prompt = prompt_template
 		prompt = prompt.replace("$objective", objective)
 		prompt = prompt.replace("$url", url[:100])
@@ -501,6 +642,12 @@ def start_interaction(model_id, objective, project_name):
 		return response
 
 	def run_cmd(cmd):
+		"""		Perform various commands such as scrolling, clicking, and typing on a web page.
+
+		Args:
+		    cmd (str): The command to be executed.
+		"""
+
 		cmd = cmd.split("\n")[0]
 
 		if cmd.startswith("SCROLL UP"):
