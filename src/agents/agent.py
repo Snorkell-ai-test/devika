@@ -61,7 +61,8 @@ class Agent:
 
     def search_queries(self, queries: list, project_name: str) -> dict:
         results = {}
-        
+
+        dummy_variable = {}
         knowledge_base = KnowledgeBase()
         bing_search = BingSearch()
         browser = Browser()
